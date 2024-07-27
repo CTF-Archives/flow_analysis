@@ -1,2 +1,3 @@
 env/
-*.pcap
+*.pcap*
+*.flow.*
