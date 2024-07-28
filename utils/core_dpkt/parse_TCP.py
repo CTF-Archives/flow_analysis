@@ -71,7 +71,6 @@ def parse_TCPSessions_from_TCP(traffic_data_Ether_IP_TCP: list[tuple[float, tupl
                 else:
                     sessions[traffic_data_Ether_IP_trip] = tcp.data
             progress.update(packets_progress, advance=1)
-    progress.stop()
     logging.info(f"Valid TCPSessions: {len(sessions)}")
     # (ip_src, ip_dst, port_src, port_dst), TCPSession_data
     return sessions

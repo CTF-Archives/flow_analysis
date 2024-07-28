@@ -105,6 +105,7 @@ def parse_HTTPSessions_from_TCPSessions(traffic_data_TCPSessions: defaultdict[tu
                 ip_src, ip_dst, port_src, port_dst = session_id
                 reverse_session_id = (ip_dst, ip_src, port_dst, port_src)
                 http_responses[reverse_session_id].append(stream)
+            progress.update(packets_progress, advance=1)
     logging.info(f"HTTP request packets quantity: {len(http_requests)}")
     logging.info(f"HTTP response packets quantity: {len(http_responses)}")
     return http_requests, http_responses
