@@ -41,14 +41,14 @@ def parse_pcap_file(pcap_file: str) -> list[tuple[float, bytes]]:
     logging.info("Calculating packets quantity...")
     _count = 0
     with open(pcap_file, "rb") as _f:
-        for ts, buf in dpkt.pcap.Reader(_f):
+        for ts, buf in dpkt.pcapng.Reader(_f):
             _count += 1
     logging.info(f"Packets quantity: {_count}")
 
     with Progress() as progress:
         packets_progress = progress.add_task("[green]Scaning for raw packets...", total=_count)
         with open(pcap_file, "rb") as _f:
-            for ts, buf in dpkt.pcap.Reader(_f):
+            for ts, buf in dpkt.pcapng.Reader(_f):
                 traffic_data.append((ts, buf))
                 progress.update(packets_progress, advance=1)
     logging.info(f"Valid raw packets: {len(traffic_data)}")

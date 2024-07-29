@@ -7,12 +7,12 @@ class SQL_injection_analyzer:
         # table_name, key_name, injection_index
         self.dbs_data: dict[str, dict[str, dict[int, list[int]]]] = {}
 
-    def sql_injection_payload_extract(self, payload: str) -> tuple[str, str, int, str, int]:
+    def sql_injection_payload_extract(self, payload_raw: str) -> tuple[str, str, int, str, int]:
         # 1%' AND SUBSTR((SELECT COALESCE(totpSecret,CHAR(32)) FROM Users WHERE id=1 LIMIT 0,1),25,1)>CHAR(57) AND 'rbHn%'='rbHn
-        head_index = payload.index("(")
-        tail_index = len(payload) - payload[::-1].index(")") + 1
+        head_index = payload_raw.index("(")
+        tail_index = len(payload_raw) - payload_raw[::-1].index(")") + 1
 
-        payload = payload[head_index:tail_index]
+        payload = payload_raw[head_index:tail_index]
         # ((SELECT COALESCE(totpSecret,CHAR(32)) FROM Users WHERE id=1 LIMIT 0,1),25,1)>CHAR(57)
         # logging.debug(f"Overall payload:\n{payload}")
 
@@ -37,12 +37,16 @@ class SQL_injection_analyzer:
         for i in ["(", ")", ","]:
             payload_extract = payload_extract.replace(i, " ")
         payload_extract = [i for i in payload_extract.split(" ") if i != ""]
-        table_name = payload_extract[6]
-        key_name = payload_extract[2]
-        injection_index = payload_extract[12]
-        compare_ascii = payload[brackets_index[1][0] : brackets_index[1][1]][1:-1]
-        operator = payload[brackets_index[0][1]]
-        return table_name, key_name, int(injection_index), operator, int(compare_ascii)
+        logging.debug(payload_extract)
+        if len(payload_extract) == 18:
+            table_name = payload_extract[9]
+            key_name = payload_extract[4]
+            injection_index = payload_extract[16]
+            compare_ascii = payload_raw.split(payload[brackets_index[0][1]])[1]
+            operator = payload[brackets_index[0][1]]
+            return table_name, key_name, int(injection_index), operator, int(compare_ascii)
+        else:
+            raise IndexError
 
     def sql_injection_data_extract(self, injection_payload: tuple[str, str, int, str, int]):
         table_name, key_name, injection_index, operator, compare_ascii = injection_payload
@@ -64,5 +68,5 @@ class SQL_injection_analyzer:
         for table_name in self.dbs_data.keys():
             for key_name in self.dbs_data[table_name].keys():
                 for injection_index in self.dbs_data[table_name][key_name].keys():
-                    res_dbs_data[table_name][key_name][injection_index]=[max(self.dbs_data[table_name][key_name][injection_index])]
+                    res_dbs_data[table_name][key_name][injection_index] = [max(self.dbs_data[table_name][key_name][injection_index])]
         return res_dbs_data
