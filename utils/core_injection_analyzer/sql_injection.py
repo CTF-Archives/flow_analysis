@@ -4,7 +4,7 @@ from rich.logging import RichHandler
 
 class SQL_injection_analyzer:
     def __init__(self) -> None:
-        # table_name, key_name, injection_index
+        # table_name, {key_name : injection_index}
         self.dbs_data: dict[str, dict[str, dict[int, list[int]]]] = {}
 
     def sql_injection_payload_extract(self, payload: str) -> tuple[str, str, int, str, int]:

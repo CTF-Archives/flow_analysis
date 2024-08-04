@@ -90,7 +90,7 @@ def parse_HTTPSessions_from_TCPSessions(traffic_data_TCPSessions: defaultdict[tu
     http_requests: defaultdict[tuple[bytes, bytes, int, int], list[bytes]] = defaultdict(list)
     http_responses: defaultdict[tuple[bytes, bytes, int, int], list[bytes]] = defaultdict(list)
     with Progress() as progress:
-        packets_progress = progress.add_task("[green]Scaning for HTTP sessions...", total=len(traffic_data_TCPSessions))
+        packets_progress = progress.add_task("[green]Scaning for HTTPSessions...", total=len(traffic_data_TCPSessions))
         # traffic_data_Ether_IP_trip -> session_id
         for session_id in traffic_data_TCPSessions.keys():
             stream = traffic_data_TCPSessions[session_id]
@@ -112,7 +112,7 @@ def parse_HTTPSessions_from_TCPSessions(traffic_data_TCPSessions: defaultdict[tu
 
 
 def parse_matched_HTTPSessions(http_requests: defaultdict[tuple[bytes, bytes, int, int], list[bytes]], http_responses: defaultdict[tuple[bytes, bytes, int, int], list[bytes]]) -> list[tuple[tuple[bytes, bytes, int, int], bytes, bytes]]:
-    matched_sessions = []
+    matched_sessions: list[tuple[tuple[bytes, bytes, int, int], bytes, bytes]] = []
     for session_id, reqs in http_requests.items():
         if session_id in http_responses:
             try:
@@ -136,7 +136,8 @@ def parse_HTTP_response_headers(payload: bytes) -> tuple[bytes, bytes]:
         return payload[:headerEnd], payload[headerEnd:]
     else:
         logging.error(f"Headers and response not found!")
-        logging.error(f"Raw payload:\n{payload}")
+        logging.error(f"Raw payload:")
+        logging.error(payload.decode(errors="ignore"))
         return b"", payload
 
 
@@ -161,3 +162,36 @@ def parse_http_gzip_response(payload: bytes) -> bytes:
         return gzip.decompress(payload)
     else:
         return b""
+
+
+def parse_HTTPSessions_decompress(matched_sessions: list[tuple[tuple[bytes, bytes, int, int], bytes, bytes]]) -> list[tuple[tuple[bytes, bytes, int, int], bytes, bytes]]:
+    matched_sessions_decompress: list[tuple[tuple[bytes, bytes, int, int], bytes, bytes]] = []
+    # (session_id, http_requests_data, http_responses_data)
+    with Progress() as progress:
+        packets_progress = progress.add_task("[green]Scaning for HTTP sessions...", total=len(matched_sessions))
+        for session_id, req, res in matched_sessions:
+            response_data_header, response_data_context = parse_HTTP_response_headers(res)
+            response_data = b""
+            response_data_header_list = [i for i in response_data_header.decode(errors="ignore").replace("\r\n", "\n").split("\n") if i != ""]
+            response_data_header_dict: dict[str, str] = {}
+            for i in response_data_header_list[1:]:
+                header_key, header_value = i.split(": ")
+                response_data_header_dict[header_key.strip()] = header_value.strip()
+            if "chunked" in str(response_data_header_dict.get("Transfer-Encoding")):
+                try:
+                    response_data = parse_http_chunked_response(response_data_context)
+                except:
+                    session_id_invaild = (socket.inet_ntop(socket.AF_INET, session_id[0]), socket.inet_ntop(socket.AF_INET, session_id[1]), session_id[2], session_id[3])
+                    logging.error(f"parse chunked failed {session_id_invaild}")
+                    # logging.error(f"raw data:\n{response_data_context}")
+                    continue
+            if "gzip" in str(response_data_header_dict.get("Content-Encoding")):
+                try:
+                    response_data = parse_http_gzip_response(response_data)
+                except:
+                    logging.error(f"parse chunked failed")
+                    logging.error(f"raw data:\n{response_data_context}")
+            progress.update(packets_progress, advance=1)
+            matched_sessions_decompress.append((session_id, req, response_data_header + response_data))
+    logging.info(f"Valid HTTP communication quantity: {len(matched_sessions)}")
+    return matched_sessions_decompress

@@ -54,13 +54,15 @@ def parse_TCPSessions_from_TCP(traffic_data_Ether_IP_TCP: list[tuple[float, tupl
     sessions: defaultdict[tuple[bytes, bytes, int, int], bytes] = defaultdict(bytes)
     ended_sessions: set[tuple[bytes, bytes, int, int]] = set()
     with Progress() as progress:
-        packets_progress = progress.add_task("[green]Scaning for raw packets...", total=len(traffic_data_Ether_IP_TCP))
+        packets_progress = progress.add_task("[green]Scaning for TCPSessions...", total=len(traffic_data_Ether_IP_TCP))
         for ts, traffic_data_Ether_IP_trip, tcp in traffic_data_Ether_IP_TCP:
             # TODO Check if it is a FIN, if so end the connection
             tcp_flags = cast(int, tcp.flags)  # type: ignore
             tcp_flags = tcp_flag_detect(tcp_flags)
-
-            if 'S' in tcp_flags:
+            
+            if "R" in tcp_flags:
+                del sessions[traffic_data_Ether_IP_trip]
+            elif "S" in tcp_flags:
                 # Handle SYN: start of a new connection or a re-connection
                 if traffic_data_Ether_IP_trip in sessions:
                     # logging.debug(f"Reconnection detected for {traffic_data_Ether_IP_trip}. Resetting session data.")
