@@ -7,7 +7,7 @@ def parse_IP_from_Ether(traffic_data_Ether: list[tuple[float, dpkt.ethernet.Ethe
     # ts, dpkt.ethernet.Ethernet
     traffic_data_Ether_IP: list[tuple[float, dpkt.ip.IP]] = []
     with Progress() as progress:
-        packets_progress = progress.add_task("[green]Scaning for IP layer packets...", total=len(traffic_data_Ether))
+        packets_progress = progress.add_task("[green]Scanning for IP layer packets...", total=len(traffic_data_Ether))
         for ts, buf in traffic_data_Ether:
             if isinstance(buf.data, dpkt.ip.IP):
                 traffic_data_Ether_IP.append((ts, buf.data))

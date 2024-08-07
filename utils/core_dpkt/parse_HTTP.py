@@ -90,7 +90,7 @@ def parse_HTTPSessions_from_TCPSessions(traffic_data_TCPSessions: defaultdict[tu
     http_requests: defaultdict[tuple[bytes, bytes, int, int], list[bytes]] = defaultdict(list)
     http_responses: defaultdict[tuple[bytes, bytes, int, int], list[bytes]] = defaultdict(list)
     with Progress() as progress:
-        packets_progress = progress.add_task("[green]Scaning for HTTPSessions...", total=len(traffic_data_TCPSessions))
+        packets_progress = progress.add_task("[green]Scanning for HTTPSessions...", total=len(traffic_data_TCPSessions))
         # traffic_data_Ether_IP_trip -> session_id
         for session_id in traffic_data_TCPSessions.keys():
             stream = traffic_data_TCPSessions[session_id]
@@ -168,7 +168,7 @@ def parse_HTTPSessions_decompress(matched_sessions: list[tuple[tuple[bytes, byte
     matched_sessions_decompress: list[tuple[tuple[bytes, bytes, int, int], bytes, bytes]] = []
     # (session_id, http_requests_data, http_responses_data)
     with Progress() as progress:
-        packets_progress = progress.add_task("[green]Scaning for HTTP sessions...", total=len(matched_sessions))
+        packets_progress = progress.add_task("[green]Scanning for HTTP sessions...", total=len(matched_sessions))
         for session_id, req, res in matched_sessions:
             response_data_header, response_data_context = parse_HTTP_response_headers(res)
             response_data = b""
