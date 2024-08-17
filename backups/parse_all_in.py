@@ -38,7 +38,7 @@ class Parser_TCP_UDP_from_capture:
                 _count += 1
             logging.info(f"Packets quantity: {_count}")
             _f.seek(0, 0)
-            packets_progress = progress.add_task("[green]Scaning for packets...", total=_count)
+            packets_progress = progress.add_task("[green]Scanning for packets...", total=_count)
             for _ts, buf in self.reader_class(_f):
                 # fix type check
                 ts = cast(float, _ts)
