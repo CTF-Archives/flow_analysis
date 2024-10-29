@@ -50,7 +50,7 @@ def parse_capture_file(file_path: str) -> tuple[int, list[tuple[float, bytes]]]:
         pcap_file (str): pcap 或 pcapng 流量包文件
 
     Returns:
-        tuple[int, list[tuple[float, bytes]]]:
+        traffic_data: tuple[int, list[tuple[float, bytes]]]:
             int: Physical Layer Protocol ID
             list[tuple[float, bytes]]:
                 - float: packet time
